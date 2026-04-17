@@ -1,0 +1,6 @@
+{
+  "routes": [
+    { "src": "/applyAds.js", "dest": "/api/ads.js" },
+    { "src": "/api/(.*)", "dest": "/api/ads.js" }
+  ]
+}
