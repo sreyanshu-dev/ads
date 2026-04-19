@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next-Gen Minimal Clock</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+        }
+        /* Custom Toggle Switch for AM/PM */
+        .toggle-btn {
+            position: relative;
+            width: 100px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 4px;
+            display: flex;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .toggle-slider {
+            position: absolute;
+            width: 44px;
+            height: 34px;
+            background: #fff;
+            border-radius: 8px;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .toggle-option {
+            flex: 1;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #666;
+            transition: color 0.3s;
+        }
+        .toggle-option.active { color: #000; }
+        
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen">
+
+    <div class="text-center">
+        <div id="clock-trigger" class="cursor-pointer group">
+            <h1 id="clock" class="text-[120px] font-black tracking-tighter leading-none mb-2">00:00</h1>
+            <div class="flex items-center justify-center gap-3">
+                <span id="ampm-badge" class="px-3 py-1 bg-white text-black text-[10px] font-black rounded-sm uppercase tracking-tighter">PM</span>
+                <p class="text-zinc-500 text-xs font-medium tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity">Edit Time</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal()"></div>
+        
+        <div class="relative glass-card p-8 rounded-[32px] w-full max-w-[340px] shadow-2xl">
+            <h2 class="text-xl font-bold mb-8 tracking-tight text-zinc-200">Adjust Clock</h2>
+            
+            <div class="space-y-6">
+                <div class="flex items-center gap-4">
+                    <div class="flex-1">
+                        <input id="hour" type="number" min="1" max="12" placeholder="HH" 
+                            class="w-full bg-transparent border-b-2 border-zinc-800 focus:border-white py-2 text-3xl font-bold outline-none transition-colors text-center">
+                    </div>
+                    <span class="text-2xl font-bold text-zinc-700">:</span>
+                    <div class="flex-1">
+                        <input id="minute" type="number" min="0" max="59" placeholder="MM" 
+                            class="w-full bg-transparent border-b-2 border-zinc-800 focus:border-white py-2 text-3xl font-bold outline-none transition-colors text-center">
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center py-4">
+                    <span class="text-sm font-medium text-zinc-500 uppercase tracking-widest">Period</span>
+                    <div class="toggle-btn" onclick="toggleAMPM()">
+                        <div id="slider" class="toggle-slider"></div>
+                        <div id="am-opt" class="toggle-option active">AM</div>
+                        <div id="pm-opt" class="toggle-option">PM</div>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button onclick="saveTime()" class="flex-1 bg-white text-black h-14 rounded-2xl font-bold hover:bg-zinc-200 transition active:scale-95">Set Time</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let customTime = null;
+        let selectedAMPM = 'AM';
+
+        function format(n) { return n < 10 ? '0' + n : n; }
+
+        function updateClock() {
+            let now = customTime ? new Date(customTime) : new Date();
+            if (customTime) customTime = new Date(now.getTime() + 1000);
+
+            let h = now.getHours();
+            let m = now.getMinutes();
+            let ampm = h >= 12 ? 'PM' : 'AM';
+
+            h = h % 12 || 12;
+
+            document.getElementById('clock').innerText = `${format(h)}:${format(m)}`;
+            document.getElementById('ampm-badge').innerText = ampm;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Modal Logic
+        const modal = document.getElementById('modal');
+        document.getElementById('clock-trigger').onclick = () => {
+            modal.classList.remove('hidden');
+        };
+
+        function closeModal() {
+            modal.classList.add('hidden');
+        }
+
+        // Custom Toggle Logic
+        function toggleAMPM() {
+            const slider = document.getElementById('slider');
+            const amOpt = document.getElementById('am-opt');
+            const pmOpt = document.getElementById('pm-opt');
+
+            if (selectedAMPM === 'AM') {
+                selectedAMPM = 'PM';
+                slider.style.transform = 'translateX(48px)';
+                pmOpt.classList.add('active');
+                amOpt.classList.remove('active');
+            } else {
+                selectedAMPM = 'AM';
+                slider.style.transform = 'translateX(0px)';
+                amOpt.classList.add('active');
+                pmOpt.classList.remove('active');
+            }
+        }
+
+        function saveTime() {
+            let h = parseInt(document.getElementById('hour').value);
+            let m = parseInt(document.getElementById('minute').value);
+            
+            if (isNaN(h) || isNaN(m)) return alert('Enter valid time');
+
+            if (selectedAMPM === 'PM' && h !== 12) h += 12;
+            if (selectedAMPM === 'AM' && h === 12) h = 0;
+
+            let now = new Date();
+            now.setHours(h, m, 0);
+            customTime = now;
+            closeModal();
+        }
+    </script>
+</body>
+</html>
